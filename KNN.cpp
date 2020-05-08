@@ -19,7 +19,7 @@ class KNN {
 public:
     
     KNN (int k_in) : k(k_in), setosa_tally(0), versicolor_tally(0),
-                        virginica_tally(0), label("") {}
+                                virginica_tally(0), label("") {}
     
     void set_label (string label_in) {
         label = label_in;
@@ -52,22 +52,37 @@ public:
     int get_virginica_tally() {
         return virginica_tally;
     }
+    
+    // stores the training data
+    void store_training_data (csvstream &input) {
+        map<string, string> map;
+        int index = 0;
+        while (input >> map) {
+            SL[index] = stod(map["sepal_length"]);
+            SW[index] = stod(map["sepal_width"]);
+            PL[index] = stod(map["petal_length"]);
+            PW[index] = stod(map["petal_width"]);
+            classes[index] = map["class"];
+            ++index;
+        }
+    }
+    
+    // computes the euclidean distance between 2 values
+    double euclidean_dist (double v1, double v2) {
+        return sqrt(pow((v1 - v2), 2));
+    }
         
     // calculate distance between test and training flower
-    // store distance and the training flowers class
     // test stores the sepal L and W + pedal L and W for one test flower
-    void store_distance (csvstream &train, vector<double> test) {
-        map<string, string> map;
-        while (train >> map) {
-            double SL = stod(map["sepal_length"]);
-            double SW = stod(map["sepal_width"]);
-            double PL = stod(map["petal_length"]);
-            double PW = stod(map["petal_width"]);
-            
-            // computes Euclidean distance
-            double dist = pow((SL - test[0]), 2) + pow((SW - test[1]), 2) +
-                            pow((PL - test[2]), 2) + pow((PW - test[3]), 2);
-            distances.push_back( {sqrt(dist), map["class"]} );
+    void store_distance (vector<double> test) {
+        for (int i = 0; i < TRAINING_DATA_SIZE; ++i) {
+            double dist = euclidean_dist(SL[i], test[0]) +
+                          euclidean_dist(SW[i], test[1]) +
+                          euclidean_dist(PL[i], test[2]) +
+                          euclidean_dist(PW[i], test[3]);
+            // store the distance between each training flower and test flower
+            // and the class of each training flower
+            distances.push_back({dist, classes[i]});
         }
     }
 
@@ -82,6 +97,7 @@ public:
     
     // sorts the distances vector based on distance
     void sort_distances () {
+
         sort(distances.begin(), distances.end(), Distance_Comparator());
     }
     
@@ -127,6 +143,7 @@ public:
         k_nearest_classes();
         select_label();
         print_results(label);
+        clear_old_test_flower();
     }
     
     void print_results (string &actual) {
@@ -134,13 +151,26 @@ public:
         cout << "Actual: " << actual << endl;
     }
     
+    // Reuse the stores training data but need to compute new distances
+    // for each test flower
+    void clear_old_test_flower() {
+        distances.clear();
+        setosa_tally = 0;
+        versicolor_tally = 0;
+        virginica_tally = 0;
+    }
+    
 private:
-    // store the training data to avoid having to create a new cvstream for
-    // every test flower
+    // store the training data
+    const static int TRAINING_DATA_SIZE = 120;
+    double SL[TRAINING_DATA_SIZE];
+    double SW[TRAINING_DATA_SIZE];
+    double PL[TRAINING_DATA_SIZE];
+    double PW[TRAINING_DATA_SIZE];
+    // store every flowers class
+    string classes[TRAINING_DATA_SIZE];
     
-    
-    // store the distance between each the test flower and every training flower
-    // as well as the training flowers class
+    // store the distance between the test flower and every training flower
     vector<pair<double, string>> distances;
     int k;
     int setosa_tally;
@@ -156,20 +186,22 @@ int main() {
     csvstream test("iris_flowers_test.csv");
     
     // PROMPT USER FOR K
-    int K = 9;
+    int K = 0;
+    cout << "Please enter a value for K: ";
+    cin >> K;
+    KNN classifier(K);
+    classifier.store_training_data(train);
     
+    // process testing data
     map<string, string> row;
     while (test >> row) {
-
         // compute distances for each individual test flower
-        KNN classifier(K);
         vector<double> test_flower = { stod(row["sepal_length"]),
              stod(row["sepal_width"]), stod(row["petal_length"]),
                                        stod(row["petal_width"]) };
         
         string actual_label = row["class"];
-        classifier.store_distance(train, test_flower);
+        classifier.store_distance(test_flower);
         classifier.run_classifier(actual_label);
     }
-    
 }
