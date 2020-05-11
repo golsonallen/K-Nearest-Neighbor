@@ -18,8 +18,8 @@ using namespace std;
 class KNN {
 public:
     
-    KNN (int k_in) : k(k_in), setosa_tally(0), versicolor_tally(0),
-                                virginica_tally(0), label("") {}
+    KNN (int k_in) : k(k_in), num_correct(0), num_seen(0), label("") {}
+
     
     void set_label (string label_in) {
         label = label_in;
@@ -29,28 +29,8 @@ public:
         return label;
     }
     
-    void inc_setosa_tally() {
-        setosa_tally++;
-    }
-    
-    void inc_versicolor_tally() {
-        versicolor_tally++;
-    }
-    
-    void inc_virginica_tally() {
-        virginica_tally++;
-    }
-    
-    int get_setosa_tally() {
-        return setosa_tally;
-    }
-    
-    int get_versicolor_tally() {
-        return versicolor_tally;
-    }
-    
-    int get_virginica_tally() {
-        return virginica_tally;
+    int get_K() {
+        return k;
     }
     
     // stores the training data
@@ -97,45 +77,32 @@ public:
     
     // sorts the distances vector based on distance
     void sort_distances () {
-
         sort(distances.begin(), distances.end(), Distance_Comparator());
     }
     
-    
     // Iterate through K nearest neighbors to get each neighbors class
     void k_nearest_classes () {
-        for (int i = 0; i < k; ++i) {
-            add_votes(distances[i].second);
-        }
-    }
-    
-    // Add votes for each class
-    void add_votes(string &class_type) {
-        if (class_type == "iris_setosa") {
-            inc_setosa_tally();
-        }
-        else if (class_type == "iris_versicolor") {
-            inc_versicolor_tally();
-        }
-        else if (class_type == "iris_virginica") {
-            inc_virginica_tally();
+        for (int i = 0; i < get_K(); ++i) {
+            string label = distances[i].second;
+            votes[label] += 1;
         }
     }
     
     // Pick the label with the most votes
     void select_label () {
-        int most_votes = max(get_setosa_tally(), get_versicolor_tally());
-        most_votes = max(most_votes, get_virginica_tally());
+        string best_label = votes.begin()->first;
+        int most_votes = votes.begin()->second;
         
-        if (most_votes == get_setosa_tally()) {
-            set_label("iris_setosa");
+        // loop through each label and its votes to determine the label with
+        // the most votes
+        for (auto &key_val : votes) {
+            if (key_val.second > most_votes) {
+                most_votes = key_val.second;
+                best_label = key_val.first;
+            }
         }
-        else if (most_votes == get_versicolor_tally()) {
-            set_label("iris_versicolor");
-        }
-        else if (most_votes == get_virginica_tally()) {
-            set_label("iris_virginica");
-        }
+        // set the best label
+        set_label(best_label);
     }
     
     void run_classifier(string &label) {
@@ -149,15 +116,21 @@ public:
     void print_results (string &actual) {
         cout << "Predicted: " << get_label() << "     ";
         cout << "Actual: " << actual << endl;
+        if (get_label() == actual) {
+            num_correct++;
+        }
+        num_seen++;
+    }
+    
+    void print_accuracy () {
+        cout << "Accuracy: " << num_correct << "/" << num_seen << endl;
     }
     
     // Reuse the stores training data but need to compute new distances
     // for each test flower
     void clear_old_test_flower() {
         distances.clear();
-        setosa_tally = 0;
-        versicolor_tally = 0;
-        virginica_tally = 0;
+        votes.clear();
     }
     
 private:
@@ -173,11 +146,11 @@ private:
     // store the distance between the test flower and every training flower
     vector<pair<double, string>> distances;
     int k;
-    int setosa_tally;
-    int versicolor_tally;
-    int virginica_tally;
+    // map keeps track of each label and how many votes it has to determine
+    // the best label
+    map<string, int> votes;
+    int num_correct, num_seen;
     string label;
-    
 };
 
 int main() {
@@ -204,4 +177,5 @@ int main() {
         classifier.store_distance(test_flower);
         classifier.run_classifier(actual_label);
     }
+    classifier.print_accuracy();
 }
