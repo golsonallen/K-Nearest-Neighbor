@@ -1,4 +1,4 @@
-sepal_length,sepal_width,petal_length, petal_width,class
+sepal_length,sepal_width,petal_length,petal_width,class
 4.6,3.1,1.5,0.2,iris_setosa
 5.4,3.9,1.7,0.4,iris_setosa
 4.6,3.4,1.4,0.3,iris_setosa

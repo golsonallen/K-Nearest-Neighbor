@@ -169,14 +169,14 @@ int main() {
     map<string, string> row;
         
     while (test >> row) {
-        
+        /*
         cout << "row:" << "\n";
         for (auto &col:row) {
           const string &column_name = col.first;
           const string &datum = col.second;
           cout << "  " << column_name << ": " << datum << "\n";
         }
-        
+        */
         
         // compute distances for each individual test flower
         vector<double> test_flower = { stod(row["sepal_length"]),
