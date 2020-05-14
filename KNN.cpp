@@ -45,15 +45,16 @@ public:
     }
     
     // stores the training data
-    void store_training_data (csvstream &input) {
+    void store_training_data (csvstream &input, vector<string> attribute_names,
+                              string label) {
         map<string, string> map;
         while (input >> map) {
-            // generalize number of attributes and name of each attribute
-            attributes[0].push_back(stod(map["sepal_length"]));
-            attributes[1].push_back(stod(map["sepal_width"]));
-            attributes[2].push_back(stod(map["petal_length"]));
-            attributes[3].push_back(stod(map["petal_width"]));
-            classes.push_back(map["class"]);
+            int index = 0;
+            for (string &attribute : attribute_names) {
+                attributes[index].push_back(stod(map[attribute]));
+                index++;
+            }
+            classes.push_back(map[label]);
         }
     }
     
@@ -164,6 +165,7 @@ private:
     string label;
 };
 
+
 int main(int argc, char *argv[]) {
     
     // error message
@@ -193,38 +195,44 @@ int main(int argc, char *argv[]) {
     cout << "Please enter an odd number for K: ";
     cin >> K;
     
-    int num_instances;
+    int num_instances = 0;
     cout << "Please enter the number of instances in the TRAINING dataset"
-        << "(size): ";
+        << " (size): ";
     cin >> num_instances;
     
-    int num_attributes;
+    int num_attributes = 0;
     cout << "Please enter the number of attributes in the dataset"
-        << "(input variables): ";
+        << " (input variables): ";
     cin >> num_attributes;
     
     
+    vector<string> attributes;
+    cout << "Please enter the attributes in the order they appear in the train"
+        << " and test file headers." << endl;
+    for (int i = 1; i <= num_attributes; ++i) {
+        string attribute;
+        cout << "Attribute #" << i << ": ";
+        cin >> attribute;
+        attributes.push_back(attribute);
+    }
+    
+    string label;
+    cout << "Please enter the label or tag (output variable): ";
+    cin >> label;
+    
     KNN classifier(K, num_attributes, num_instances);
-    classifier.store_training_data(train);
+    classifier.store_training_data(train, attributes, label);
     
     // process testing data
     map<string, string> row;
     cout << endl;
     cout << "RESULTS" << endl;
     while (test >> row) {
-        /*
-        cout << "row:" << "\n";
-        for (auto &col:row) {
-          const string &column_name = col.first;
-          const string &datum = col.second;
-          cout << "  " << column_name << ": " << datum << "\n";
+    
+        vector<double> test_flower;
+        for (string attribute : attributes) {
+            test_flower.push_back(stod(row[attribute]));
         }
-        */
-        
-        // compute distances for each individual test flower
-        vector<double> test_flower = { stod(row["sepal_length"]),
-             stod(row["sepal_width"]), stod(row["petal_length"]),
-                                       stod(row["petal_width"]) };
         
         string actual_label = row["class"];
         classifier.store_distance(test_flower);
