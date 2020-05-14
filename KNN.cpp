@@ -18,8 +18,15 @@ using namespace std;
 class KNN {
 public:
     
-    KNN (int k_in) : k(k_in), num_correct(0), num_seen(0), label("") {}
-
+    KNN (int k_in, int atttributes_in, int instances_in)
+    : k(k_in), num_attributes(atttributes_in), num_instances(instances_in),
+               num_correct(0), num_seen(0), label("") {
+            
+        for (int i = 0; i < num_attributes; ++i) {
+            vector<double> vec;
+            attributes.push_back(vec);
+        }
+    }
     
     void set_label (string label_in) {
         label = label_in;
@@ -33,36 +40,39 @@ public:
         return k;
     }
     
+    int get_num_instances() {
+        return num_instances;
+    }
+    
     // stores the training data
     void store_training_data (csvstream &input) {
         map<string, string> map;
-        int index = 0;
         while (input >> map) {
-            SL[index] = stod(map["sepal_length"]);
-            SW[index] = stod(map["sepal_width"]);
-            PL[index] = stod(map["petal_length"]);
-            PW[index] = stod(map["petal_width"]);
-            classes[index] = map["class"];
-            ++index;
+            // generalize number of attributes and name of each attribute
+            attributes[0].push_back(stod(map["sepal_length"]));
+            attributes[1].push_back(stod(map["sepal_width"]));
+            attributes[2].push_back(stod(map["petal_length"]));
+            attributes[3].push_back(stod(map["petal_width"]));
+            classes.push_back(map["class"]);
         }
     }
     
-    // computes the euclidean distance between 2 values
-    double euclidean_dist (double v1, double v2) {
-        return sqrt(pow((v1 - v2), 2));
+    // computes the square of the euclidean distance between 2 values
+    double euclidean_dist_squared (double x1, double x2) {
+        return pow((x1 - x2), 2);
     }
         
     // calculate distance between test and training flower
     // test stores the sepal L and W + pedal L and W for one test flower
     void store_distance (vector<double> test) {
-        for (int i = 0; i < TRAINING_DATA_SIZE; ++i) {
-            double dist = euclidean_dist(SL[i], test[0]) +
-                          euclidean_dist(SW[i], test[1]) +
-                          euclidean_dist(PL[i], test[2]) +
-                          euclidean_dist(PW[i], test[3]);
-            // store the distance between each training flower and test flower
-            // and the class of each training flower
-            distances.push_back({dist, classes[i]});
+        // loop through each instance
+        for (int i = 0; i < num_instances; ++i) {
+            // calculate distance of each attribute to get total distance
+            double dist = 0.0;
+            for (int j = 0; j < num_attributes; ++j) {
+                dist += euclidean_dist_squared(attributes[j][i], test[j]);
+            }
+            distances.push_back({sqrt(dist), classes[i]});
         }
     }
 
@@ -80,7 +90,8 @@ public:
         sort(distances.begin(), distances.end(), Distance_Comparator());
     }
     
-    // Iterate through K nearest neighbors to get each neighbors class
+    // Iterate through K nearest neighbors to get each neighbors class and
+    // add a vote for that class
     void k_nearest_classes () {
         for (int i = 0; i < get_K(); ++i) {
             string label = distances[i].second;
@@ -123,51 +134,73 @@ public:
     }
     
     void print_accuracy () {
+        cout << endl;
         cout << "Accuracy: " << num_correct << "/" << num_seen << endl;
     }
     
-    // Reuse the stores training data but need to compute new distances
-    // for each test flower
+    // Reuse the stored training data but need to compute new distances
+    // and votes for each test flower
     void clear_old_test_flower() {
         distances.clear();
         votes.clear();
     }
     
 private:
-    // store the training data
-    const static int TRAINING_DATA_SIZE = 120;
-    double SL[TRAINING_DATA_SIZE];
-    double SW[TRAINING_DATA_SIZE];
-    double PL[TRAINING_DATA_SIZE];
-    double PW[TRAINING_DATA_SIZE];
+    // vector of vectors of doubles to store the data for each attribute
+    vector<vector<double> > attributes;
     // store every flowers class
-    string classes[TRAINING_DATA_SIZE];
+    vector<string> classes;
     
     // store the distance between the test flower and every training flower
     vector<pair<double, string>> distances;
-    int k;
     // map keeps track of each label and how many votes it has to determine
     // the best label
     map<string, int> votes;
+    int k;
+    int num_attributes;
+    int num_instances;
     int num_correct, num_seen;
     string label;
 };
 
-int main() {
+int main(int argc, char *argv[]) {
     
-    csvstream train("iris_flowers_train.csv");
-    csvstream test("iris_flowers_test.csv");
+    // error message
+    if (argc != 3) {
+        cout << "Usage: KNN.exe TRAIN_FILE TEST_FILE" << endl;
+        return 1;
+    }
+    
+    // opening training file
+    ifstream training(argv[1]);
+    if (!training.is_open()) {
+        cout << "Error opening file: " << string(argv[1]) << endl;
+        return 1;
+    }
+    csvstream train((string(argv[1])));
+    
+    // opening testing file
+    ifstream testing(argv[2]);
+    if (!testing.is_open()) {
+        cout << "Error opening file: " << string(argv[2]) << endl;
+        return 1;
+    }
+    csvstream test((string(argv[2])));
     
     // PROMPT USER FOR K
     int K = 0;
-    cout << "Please enter a value for K: ";
+    cout << "Please enter an odd number for K: ";
     cin >> K;
-    KNN classifier(K);
+    
+    // FIX
+    // SHOULD BE USER INPUT
+    KNN classifier(K, 4, 150);
     classifier.store_training_data(train);
     
     // process testing data
     map<string, string> row;
-        
+    cout << endl;
+    cout << "RESULTS" << endl;
     while (test >> row) {
         /*
         cout << "row:" << "\n";
