@@ -68,6 +68,7 @@ public:
         // loop through each instance
         for (int i = 0; i < num_instances; ++i) {
             // calculate distance of each attribute to get total distance
+            // between each flower in the training set and the test flower
             double dist = 0.0;
             for (int j = 0; j < num_attributes; ++j) {
                 dist += euclidean_dist_squared(attributes[j][i], test[j]);
@@ -187,14 +188,23 @@ int main(int argc, char *argv[]) {
     }
     csvstream test((string(argv[2])));
     
-    // PROMPT USER FOR K
+    // Prompt user for K and other info about dataset
     int K = 0;
     cout << "Please enter an odd number for K: ";
     cin >> K;
     
-    // FIX
-    // SHOULD BE USER INPUT
-    KNN classifier(K, 4, 150);
+    int num_instances;
+    cout << "Please enter the number of instances in the TRAINING dataset"
+        << "(size): ";
+    cin >> num_instances;
+    
+    int num_attributes;
+    cout << "Please enter the number of attributes in the dataset"
+        << "(input variables): ";
+    cin >> num_attributes;
+    
+    
+    KNN classifier(K, num_attributes, num_instances);
     classifier.store_training_data(train);
     
     // process testing data
