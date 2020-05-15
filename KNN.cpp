@@ -127,7 +127,7 @@ public:
     }
     
     void print_results (string &actual) {
-        cout << "Predicted: " << get_label() << "     ";
+        cout << "Predicted: " << get_label() << "\t";
         cout << "Actual: " << actual << endl;
         if (get_label() == actual) {
             num_correct++;
@@ -149,7 +149,7 @@ public:
     
 private:
     // vector of vectors of doubles to store the data for each attribute
-    vector<vector<double> > attributes;
+    vector<vector<double>> attributes;
     // store every flowers class
     vector<string> classes;
     
@@ -205,17 +205,19 @@ int main(int argc, char *argv[]) {
         << " (input variables): ";
     cin >> num_attributes;
     
+    string blank; // Deal with trailing newline character
+    getline(cin, blank); // Ignore the rest of the line
     
     vector<string> attributes;
     cout << "Please enter the attributes in the order they appear in the train"
         << " and test file headers." << endl;
     for (int i = 1; i <= num_attributes; ++i) {
-        string attribute;
         cout << "Attribute #" << i << ": ";
-        cin >> attribute;
+        string attribute = "";
+        getline(cin, attribute); // FIX THIS
         attributes.push_back(attribute);
     }
-    
+        
     string label;
     cout << "Please enter the label or tag (output variable): ";
     cin >> label;
@@ -230,11 +232,11 @@ int main(int argc, char *argv[]) {
     while (test >> row) {
     
         vector<double> test_flower;
-        for (string attribute : attributes) {
+        for (string &attribute : attributes) {
             test_flower.push_back(stod(row[attribute]));
         }
         
-        string actual_label = row["class"];
+        string actual_label = row[label];
         classifier.store_distance(test_flower);
         classifier.run_classifier(actual_label);
     }
