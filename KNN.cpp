@@ -109,7 +109,7 @@ public:
     }
     
     void print_results (string &actual) {
-        cout << "Predicted: " << get_label() << "\t";
+        cout << "Predicted: " << get_label() << "    ";
         cout << "Actual: " << actual << endl;
         if (get_label() == actual) {
             num_correct++;
