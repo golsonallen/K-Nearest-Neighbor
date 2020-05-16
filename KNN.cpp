@@ -153,7 +153,8 @@ private:
     // store every instances class
     vector<string> classes;
     
-    // store the distance between the test  and every training instance
+    // store the distance between the test and every training instance
+    // as well as the training instances label/class
     vector<pair<double, string>> distances;
     // map keeps track of each label and how many votes it has to determine
     // the best label
@@ -163,7 +164,6 @@ private:
     int num_instances;
     int num_correct, num_seen;
     string label;
-    
 };
 
 
@@ -237,4 +237,5 @@ int main(int argc, char *argv[]) {
     
     training.close();
     testing.close();
+    return 0;
 }
