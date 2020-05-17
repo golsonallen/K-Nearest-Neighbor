@@ -47,10 +47,12 @@ public:
         int count = 0;
         while (input >> map) {
             int index = 0;
+            // store the data for every attribute
             for (string &attribute : attribute_names) {
                 attributes[index].push_back(stod(map[attribute]));
                 index++;
             }
+            // store each instances label
             classes.push_back(map[label]);
             count++;
         }
@@ -67,12 +69,14 @@ public:
     void store_distance (vector<double> test) {
         // loop through each instance
         for (int i = 0; i < get_num_instances(); ++i) {
-            // calculate distance of each attribute to get total distance
+            // calculate distance between each attribute to get total distance
             // between each item in the training set and the test instance
             double dist = 0.0;
             for (int j = 0; j < get_num_attributes(); ++j) {
                 dist += euclidean_dist_squared(attributes[j][i], test[j]);
             }
+            // add distance between the test and training instance as well as
+            // the training instance's class
             distances.push_back({sqrt(dist), classes[i]});
         }
     }
@@ -224,7 +228,7 @@ int main(int argc, char *argv[]) {
     cout << "RESULTS" << endl;
     while (test >> row) {
     
-        vector<double> test;
+        vector<double> test; // stores the data for a test instance
         for (string &attribute : attributes) {
             test.push_back(stod(row[attribute]));
         }
